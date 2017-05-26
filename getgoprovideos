@@ -1,0 +1,28 @@
+#!/bin/bash
+# a script to move videos from gopro camera and encode them
+cd /workha/digivideot
+cd 20"`date +%y`"
+mkdir "`date +%m%d`"
+cd "`date +%m%d`"
+# sdc1 = memory card reader and its gopro memory card
+mount /dev/sdc1 /mnt/gopro/
+mv /mnt/gopro/DCIM/*/* .
+umount /mnt/gopro
+
+# rotate JPGs (if there's any)
+nice -n 19 jhead -autorot *.JPG
+
+# h265 is better, especially when using low bitrate(smaller encoded files) but it isn't yet to well supported so I won't use it
+# nice -n 19 ls -1 *.MP4 |cut -d '.' -f1 |xargs -i avconv -i '{}'.MP4 -acodec libvo_aacenc -ab 128k -ac 1 -vcodec libx265 -preset medium -crf 31 -threads 0 '{}'_pakattu.mp4
+
+# what would a be good CRF value?
+# http://goughlui.com/2016/08/27/video-compression-testing-x264-vs-x265-crf-in-handbrake-0-10-5/
+# "normal" blurayrip is ~3GB / 100 min. 6000 seconds & 3000MB -> 3000/6000=0.5MB/sec. 18 min gopro video with the same bitrate wound be 0.5*18*60=540MB.
+nice -n 19 ls -1 *.MP4 |cut -d '.' -f1 |xargs -i avconv -i '{}'.MP4 -acodec libvo_aacenc -ab 128k -ac 1 -vcodec libx264 -preset medium -crf 33 -threads 0 '{}'_pakattu.mp4
+
+#remove originals
+#rm *.MP4
+
+ls /workha/digivideot/20"`date +%y`"/"`date +%m%d`"
+echo /workha/digivideot/20"`date +%y`"/"`date +%m%d`"
+echo "Z:\digivideot\20"`date +%y`\\`date +%m%d`
